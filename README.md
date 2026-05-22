@@ -6,10 +6,10 @@ Use this extension if you want Factory's full model catalog inside pi while keep
 
 ## Quick start
 
-1. Install the package:
+1. Install from GitHub (not published to npm yet):
 
 ```bash
-pi install npm:pi-droid-sdk
+pi install https://github.com/bentossell/pi-droid-sdk
 ```
 
 Or from a local checkout:
