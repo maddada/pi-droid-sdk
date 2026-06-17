@@ -69,6 +69,8 @@ const coreReasoning = {
 // Generated/maintained fallback Factory catalog snapshot.
 // Refresh with: npm run refresh:droid-snapshots -- --write
 export const FALLBACK_MODEL_ITEMS: DroidFallbackModelItem[] = [
+	{ id: "claude-opus-4-8", displayName: "Claude Opus 4.8", ...claudeReasoning, tokenMultiplier: 2 },
+	{ id: "claude-opus-4-8-fast", displayName: "Claude Opus 4.8 Fast", ...claudeReasoning, tokenMultiplier: 12 },
 	{ id: "claude-opus-4-7", displayName: "Claude Opus 4.7", ...claudeReasoning, tokenMultiplier: 2 },
 	{ id: "claude-opus-4-7-fast", displayName: "Claude Opus 4.7 Fast", ...claudeReasoning, tokenMultiplier: 12 },
 	{ id: "claude-opus-4-6", displayName: "Claude Opus 4.6", ...claudeReasoning, tokenMultiplier: 2 },

@@ -50,6 +50,8 @@ describe("discoverModels", () => {
 
 	it("returns fallback models when no API key", async () => {
 		const models = await discoverModels();
+		expect(models.some((model) => model.id === "claude-opus-4-8")).toBe(true);
+		expect(models.some((model) => model.id === "claude-opus-4-8-fast")).toBe(true);
 		expect(models.some((model) => model.id === "kimi-k2.5")).toBe(true);
 		expect(models.some((model) => model.id === "glm-5.1")).toBe(true);
 		expect(mockedCreateSession).not.toHaveBeenCalled();
@@ -78,7 +80,7 @@ describe("discoverModels", () => {
 		expect(models).toEqual([
 			expect.objectContaining({ id: "kimi-k2.5", name: "Droid Core (Kimi K2.5)" }),
 		]);
-		expect(mockedCreateSession).toHaveBeenCalled();
+		expect(mockedCreateSession).toHaveBeenCalledWith(expect.objectContaining({ modelId: "claude-opus-4-8" }));
 	});
 });
 
