@@ -36,6 +36,7 @@ class DroidAbortError extends Error {
 }
 
 type DroidStreamMessage = Awaited<ReturnType<DroidSession["stream"]>> extends AsyncGenerator<infer T> ? T : never;
+type DroidCreateSessionOptions = NonNullable<Parameters<typeof createSession>[0]> & { apiKey?: string };
 
 interface DroidLiveRun {
 	id: string;
@@ -83,6 +84,22 @@ function resolveFactoryApiKey(optionsApiKey?: string): string | undefined {
 	if (trimmed && trimmed !== "FACTORY_API_KEY") return trimmed;
 	if (trimmed === "FACTORY_API_KEY") return process.env.FACTORY_API_KEY?.trim() || undefined;
 	return undefined;
+}
+
+function errorMessage(error: unknown): string {
+	if (error instanceof Error) return error.message;
+	return String(error);
+}
+
+function withFactoryApiKey(
+	options: NonNullable<Parameters<typeof createSession>[0]>,
+	apiKey: string,
+): DroidCreateSessionOptions {
+	return {
+		...options,
+		apiKey,
+		env: { ...process.env, ...options.env, FACTORY_API_KEY: apiKey },
+	};
 }
 
 function getPendingLiveRun(context: Context): DroidLiveRun | undefined {
@@ -391,17 +408,16 @@ export function streamDroid(
 					})
 				: undefined;
 
-			const session = await createSession({
+			const session = await createSession(withFactoryApiKey({
 				modelId: model.id,
 				cwd,
 				reasoningEffort,
 				autonomyLevel: resolveDroidAutonomyLevel(),
 				mcpServers: bridgeRun?.enabled ? bridgeRun.mcpServers : undefined,
-				env: { ...process.env, FACTORY_API_KEY: apiKey },
 				permissionHandler: handleDroidPermissionRequest,
 				askUserHandler: handleDroidAskUserRequest,
 				abortSignal: options?.signal,
-			});
+			}, apiKey));
 
 			liveRunCounter += 1;
 			liveRun = {
@@ -430,9 +446,11 @@ export function streamDroid(
 
 			if (error instanceof DroidAbortError) {
 				partial.stopReason = "aborted";
+				partial.errorMessage = errorMessage(error);
 				stream.push({ type: "error", reason: "aborted", error: partial });
 			} else {
 				partial.stopReason = "error";
+				partial.errorMessage = errorMessage(error);
 				stream.push({ type: "error", reason: "error", error: partial });
 			}
 		} finally {

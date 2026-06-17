@@ -5,6 +5,8 @@ import type { ModelThinkingLevel, ThinkingLevelMap } from "@earendil-works/pi-ai
 import { ReasoningEffort } from "@factory/droid-sdk";
 import { FALLBACK_MODEL_ITEMS } from "./droid-fallback-models.generated.js";
 
+type DroidCreateSessionOptions = NonNullable<Parameters<typeof createSession>[0]> & { apiKey?: string };
+
 const FACTORY_PROVIDER_ID = "factory";
 const FACTORY_API_KEY_ENV_VAR = "FACTORY_API_KEY";
 const FALLBACK_CONTEXT_WINDOW = 200_000;
@@ -237,6 +239,17 @@ function discoveryFailedIssue(error: unknown): DroidModelFallbackIssue {
 	};
 }
 
+function withFactoryApiKey(
+	options: NonNullable<Parameters<typeof createSession>[0]>,
+	apiKey: string,
+): DroidCreateSessionOptions {
+	return {
+		...options,
+		apiKey,
+		env: { ...process.env, ...options.env, FACTORY_API_KEY: apiKey },
+	};
+}
+
 export async function discoverModels(options: DiscoverModelsOptions = {}): Promise<ProviderModelConfig[]> {
 	const apiKey = await getDiscoveryApiKey();
 	if (!apiKey) {
@@ -245,11 +258,10 @@ export async function discoverModels(options: DiscoverModelsOptions = {}): Promi
 	}
 
 	try {
-		const session = await createSession({
+		const session = await createSession(withFactoryApiKey({
 			modelId: FALLBACK_MODEL_ITEMS[0]?.id ?? "kimi-k2.5",
 			cwd: process.cwd(),
-			env: { ...process.env, FACTORY_API_KEY: apiKey },
-		});
+		}, apiKey));
 		try {
 			const available = session.initResult.availableModels ?? [];
 			if (available.length === 0) {

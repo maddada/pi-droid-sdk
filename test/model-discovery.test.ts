@@ -19,8 +19,74 @@ vi.mock("@factory/droid-sdk", async (importOriginal) => {
 
 import { createSession } from "@factory/droid-sdk";
 import { ReasoningEffort } from "@factory/droid-sdk";
+import { FALLBACK_MODEL_ITEMS } from "../src/droid-fallback-models.generated.js";
 
 const mockedCreateSession = vi.mocked(createSession);
+
+const expectedFallbackModelIds = [
+	"claude-opus-4-8",
+	"claude-opus-4-8-fast",
+	"claude-opus-4-7",
+	"claude-opus-4-7-fast",
+	"claude-opus-4-6",
+	"claude-opus-4-6-fast",
+	"claude-opus-4-5-20251101",
+	"claude-opus-4-1-20250805",
+	"claude-sonnet-4-6",
+	"claude-sonnet-4-5-20250929",
+	"claude-sonnet-4-20250514",
+	"claude-3-7-sonnet-20250219",
+	"claude-haiku-4-5-20251001",
+	"claude-3-5-haiku-20241022",
+	"claude-3-5-sonnet-20241022",
+	"aspen-05-15",
+	"almond-05-27",
+	"gpt-5.5",
+	"gpt-5.5-fast",
+	"gpt-5.5-pro",
+	"gpt-5.4",
+	"gpt-5.4-fast",
+	"gpt-5.4-mini",
+	"gpt-5.3-codex",
+	"gpt-5.3-codex-fast",
+	"gpt-5.2",
+	"gpt-5.2-codex",
+	"gpt-5.1-codex-max",
+	"gpt-5.1-codex",
+	"gpt-5.1",
+	"gpt-5-codex",
+	"gpt-5-2025-08-07",
+	"gpt-5-mini-2025-08-07",
+	"gpt-5-nano-2025-08-07",
+	"olm-03-05",
+	"orbit-04-09",
+	"olive-05-22",
+	"oriel-06-01",
+	"oxide-06-01",
+	"oxbow-06-01",
+	"ocelot-06-01",
+	"gemini-3.5-flash",
+	"gemini-3.1-pro-preview",
+	"gemini-3-pro-preview",
+	"gemini-3-flash-preview",
+	"gemini-2.5-pro",
+	"gemini-2.5-flash",
+	"gantry-05-07",
+	"titan-02-12",
+	"glm-5.1",
+	"glm-5",
+	"glm-4.7",
+	"glm-4.6",
+	"kimi-k2.7-code",
+	"kimi-k2.6",
+	"kimi-k2.5",
+	"nemotron-3-ultra",
+	"deepseek-v4-pro",
+	"minimax-m3",
+	"minimax-m2.7",
+	"minimax-m2.5",
+	"factory-router",
+];
 
 function writeStoredFactoryApiKey(apiKey: string): void {
 	writeFileSync(
@@ -50,10 +116,11 @@ describe("discoverModels", () => {
 
 	it("returns fallback models when no API key", async () => {
 		const models = await discoverModels();
-		expect(models.some((model) => model.id === "claude-opus-4-8")).toBe(true);
-		expect(models.some((model) => model.id === "claude-opus-4-8-fast")).toBe(true);
-		expect(models.some((model) => model.id === "kimi-k2.5")).toBe(true);
-		expect(models.some((model) => model.id === "glm-5.1")).toBe(true);
+		const ids = new Set(models.map((model) => model.id));
+		const fallbackIds = FALLBACK_MODEL_ITEMS.map((model) => model.id);
+
+		expect(new Set(fallbackIds).size).toBe(fallbackIds.length);
+		expect(expectedFallbackModelIds.filter((id) => !ids.has(id))).toEqual([]);
 		expect(mockedCreateSession).not.toHaveBeenCalled();
 	});
 
@@ -80,7 +147,11 @@ describe("discoverModels", () => {
 		expect(models).toEqual([
 			expect.objectContaining({ id: "kimi-k2.5", name: "Droid Core (Kimi K2.5)" }),
 		]);
-		expect(mockedCreateSession).toHaveBeenCalledWith(expect.objectContaining({ modelId: "claude-opus-4-8" }));
+		expect(mockedCreateSession).toHaveBeenCalledWith(expect.objectContaining({
+			apiKey: "factory-test-key",
+			modelId: "claude-opus-4-8",
+			env: expect.objectContaining({ FACTORY_API_KEY: "factory-test-key" }),
+		}));
 	});
 });
 
